@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { IPSettings, TariffOption } from '../types';
+import type { IPSettings } from '../types';
 import { tariffOptions } from '../data/tariffOptions';
 
 interface Props {

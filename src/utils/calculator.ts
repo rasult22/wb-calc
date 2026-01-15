@@ -5,7 +5,6 @@ import type {
   Warehouse,
   CategoryCommission,
   TariffOption,
-  LogisticsRates,
 } from '../types';
 import { logisticsRates } from '../data/logisticsRates';
 

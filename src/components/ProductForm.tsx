@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import type { ProductInput, Warehouse } from '../types';
+import type { ProductInput } from '../types';
 import { categories, searchCategories } from '../data/categories';
 import { getWarehousesByType } from '../data/warehouses';
 
