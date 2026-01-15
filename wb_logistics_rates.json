@@ -1,0 +1,24 @@
+{
+  "box": {
+    "delivery_1l": 46,
+    "delivery_extra_l": 14,
+    "storage_1l": 0.08,
+    "storage_extra_l": 0.08,
+    "return_processing": 50
+  },
+  "mono": {
+    "delivery_1l": 41.4,
+    "delivery_extra_l": 12.6,
+    "storage_1l": 0,
+    "storage_extra_l": 0,
+    "storage_monopalette": 22.5,
+    "return_processing": 50
+  },
+  "volume_coefficients": {
+    "0.2": 23,
+    "0.4": 26,
+    "0.6": 29,
+    "0.8": 30,
+    "1.0": 32
+  }
+}
