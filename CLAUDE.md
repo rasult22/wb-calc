@@ -45,12 +45,18 @@ CalculationResult (profit, margins, costs breakdown)
 - `src/types/index.ts` - All TypeScript interfaces (`ProductInput`, `CalculationResult`, `IPSettings`, etc.) and default values
 - `src/utils/calculator.ts` - All calculation formulas (volume, logistics, commission, tax, profit)
 - `src/App.tsx` - Main component managing state and connecting everything
+- `src/hooks/useIPSettings.ts` - Hook for IP settings management with localStorage persistence
+- `src/components/` - UI components:
+  - `IPSettingsPanel.tsx` - IP selection, quick settings, tariff options
+  - `IPSettingsModal.tsx` - Modal for creating/editing IP profiles
+  - `ProductForm.tsx` - Product input form
+  - `ResultCard.tsx` - Calculation results display
 - `src/data/` - Reference data:
   - `categories.ts` - WB product categories with commission rates (FBO/FBS)
   - `warehouses.ts` - WB warehouse tariffs (delivery/storage per liter)
   - `tariffOptions.ts` - Optional WB subscription features that add to commission
   - `logisticsRates.ts` - Base logistics rates and volume coefficients
-  - `ipSettings.ts` - Default seller (IP) tax/acquiring settings
+  - `ipSettings.ts` - Default seller (IP) profiles
 
 ### Key Concepts
 
@@ -58,6 +64,15 @@ CalculationResult (profit, margins, costs breakdown)
 - **Короб vs Моно**: Delivery types - box shipment vs mono-palette
 - **Commission**: Base rate from category + optional tariff features
 - **IP Settings**: Individual seller's tax regime, margin threshold, acquiring fees
+
+### IP Settings Module
+
+The `useIPSettings` hook manages multiple IP (seller) profiles:
+- **CRUD operations**: create, update, delete IP profiles
+- **localStorage keys**: `wb-calc-ip-settings` (profiles), `wb-calc-selected-ip` (selected ID)
+- **Each IP has**: id, name, margin_type, min_margin, tax_usn, tax_type, tax_nds, acquiring, selected_options
+- **Margin types**: "Маржинальность прихода" (profit/cost) vs "Маржинальность продаж" (profit/revenue)
+- **Quick settings**: Users can edit IP parameters inline without opening modal
 
 ### Calculation Logic
 
