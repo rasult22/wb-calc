@@ -2,9 +2,9 @@ import { useState, useMemo } from 'react';
 import type { ProductInput, CalculationResult } from './types';
 import { DEFAULT_PRODUCT_INPUT } from './types';
 import { useIPSettings } from './hooks/useIPSettings';
+import { useCategories } from './hooks/useCategories';
 import { tariffOptions } from './data/tariffOptions';
 import { getWarehouse, getWarehousesByType } from './data/warehouses';
-import { getCategoryBySubject } from './data/categories';
 import { calculateUnitEconomics } from './utils/calculator';
 import { IPSettingsPanel } from './components/IPSettingsPanel';
 import { ProductForm } from './components/ProductForm';
@@ -22,6 +22,9 @@ function App() {
     deleteIP,
     toggleTariffOption,
   } = useIPSettings();
+
+  // Хук для категорий
+  const { getCategoryBySubject } = useCategories();
 
   // Состояние товара
   const [product, setProduct] = useState<ProductInput>(() => {
@@ -64,7 +67,7 @@ function App() {
       category,
       tariffOptions
     );
-  }, [product, currentIP, isValidForCalculation]);
+  }, [product, currentIP, isValidForCalculation, getCategoryBySubject]);
 
   // Обработчики
   const handleSelectIP = (id: string) => {

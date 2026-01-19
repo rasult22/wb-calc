@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import type { ProductInput } from '../types';
-import { categories, searchCategories } from '../data/categories';
+import { useCategories } from '../hooks/useCategories';
 import { getWarehousesByType } from '../data/warehouses';
 
 interface Props {
@@ -12,10 +12,12 @@ export function ProductForm({ product, onChange }: Props) {
   const [categorySearch, setCategorySearch] = useState('');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
+  const { categories, isLoading: categoriesLoading, searchCategories } = useCategories();
+
   const filteredCategories = useMemo(() => {
     if (!categorySearch) return categories.slice(0, 20);
     return searchCategories(categorySearch, 20);
-  }, [categorySearch]);
+  }, [categorySearch, categories, searchCategories]);
 
   const availableWarehouses = useMemo(() => {
     return getWarehousesByType(product.delivery_type);
@@ -68,18 +70,28 @@ export function ProductForm({ product, onChange }: Props) {
           />
           {showCategoryDropdown && (
             <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-              {filteredCategories.map(cat => (
-                <div
-                  key={cat.subject}
-                  onClick={() => handleCategorySelect(cat.subject)}
-                  className="px-3 py-2 hover:bg-purple-50 cursor-pointer"
-                >
-                  <div className="text-sm font-medium">{cat.subject}</div>
-                  <div className="text-xs text-gray-500">
-                    {cat.category} • FBO: {cat.commission_fbo}%
-                  </div>
+              {categoriesLoading ? (
+                <div className="px-3 py-4 text-center text-gray-500">
+                  Загрузка категорий...
                 </div>
-              ))}
+              ) : filteredCategories.length === 0 ? (
+                <div className="px-3 py-4 text-center text-gray-500">
+                  Ничего не найдено
+                </div>
+              ) : (
+                filteredCategories.map(cat => (
+                  <div
+                    key={cat.subject}
+                    onClick={() => handleCategorySelect(cat.subject)}
+                    className="px-3 py-2 hover:bg-purple-50 cursor-pointer"
+                  >
+                    <div className="text-sm font-medium">{cat.subject}</div>
+                    <div className="text-xs text-gray-500">
+                      {cat.category} • FBO: {cat.commission_fbo}%
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>
