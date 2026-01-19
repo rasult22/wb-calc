@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
-import type { ProductInput, IPSettings, CalculationResult } from './types';
+import type { ProductInput, CalculationResult } from './types';
 import { DEFAULT_PRODUCT_INPUT } from './types';
-import { defaultIPSettings } from './data/ipSettings';
+import { useIPSettings } from './hooks/useIPSettings';
 import { tariffOptions } from './data/tariffOptions';
 import { getWarehouse, getWarehousesByType } from './data/warehouses';
 import { getCategoryBySubject } from './data/categories';
@@ -11,24 +11,27 @@ import { ProductForm } from './components/ProductForm';
 import { ResultCard } from './components/ResultCard';
 
 function App() {
-  // Состояние ИП
-  const [ipSettings, setIPSettings] = useState<IPSettings[]>(defaultIPSettings);
-  const [selectedIP, setSelectedIP] = useState<string>(defaultIPSettings[0]?.name || '');
+  // Хук для управления ИП
+  const {
+    ipSettings,
+    currentIP,
+    selectedIPId,
+    selectIP,
+    createIP,
+    updateIP,
+    deleteIP,
+    toggleTariffOption,
+  } = useIPSettings();
 
   // Состояние товара
   const [product, setProduct] = useState<ProductInput>(() => {
     const warehouses = getWarehousesByType('Короб');
     return {
       ...DEFAULT_PRODUCT_INPUT,
-      ip_name: defaultIPSettings[0]?.name || '',
+      ip_name: currentIP?.name || '',
       warehouse: warehouses[0]?.name || '',
     };
   });
-
-  // Текущие настройки ИП
-  const currentIP = useMemo(() => {
-    return ipSettings.find(ip => ip.name === selectedIP);
-  }, [ipSettings, selectedIP]);
 
   // Проверка валидности данных для расчёта
   const isValidForCalculation = useMemo(() => {
@@ -55,24 +58,21 @@ function App() {
     if (!warehouse || !category) return null;
 
     return calculateUnitEconomics(
-      { ...product, ip_name: selectedIP },
+      { ...product, ip_name: currentIP.name },
       currentIP,
       warehouse,
       category,
       tariffOptions
     );
-  }, [product, currentIP, selectedIP, isValidForCalculation]);
+  }, [product, currentIP, isValidForCalculation]);
 
   // Обработчики
-  const handleSelectIP = (name: string) => {
-    setSelectedIP(name);
-    setProduct(prev => ({ ...prev, ip_name: name }));
-  };
-
-  const handleUpdateIP = (updatedIP: IPSettings) => {
-    setIPSettings(prev =>
-      prev.map(ip => ip.name === updatedIP.name ? updatedIP : ip)
-    );
+  const handleSelectIP = (id: string) => {
+    selectIP(id);
+    const ip = ipSettings.find(i => i.id === id);
+    if (ip) {
+      setProduct(prev => ({ ...prev, ip_name: ip.name }));
+    }
   };
 
   const handleProductChange = (updatedProduct: ProductInput) => {
@@ -98,9 +98,13 @@ function App() {
           <div className="lg:col-span-2 space-y-4">
             <IPSettingsPanel
               ipSettings={ipSettings}
-              selectedIP={selectedIP}
+              currentIP={currentIP}
+              selectedIPId={selectedIPId}
               onSelectIP={handleSelectIP}
-              onUpdateIP={handleUpdateIP}
+              onCreateIP={createIP}
+              onUpdateIP={updateIP}
+              onDeleteIP={deleteIP}
+              onToggleTariffOption={toggleTariffOption}
             />
 
             <ProductForm

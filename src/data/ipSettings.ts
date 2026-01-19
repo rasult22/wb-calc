@@ -2,6 +2,7 @@ import type { IPSettings } from '../types';
 
 export const defaultIPSettings: IPSettings[] = [
   {
+    id: 'ip-1',
     name: 'ИП Technest',
     margin_type: 'Маржинальность прихода',
     min_margin: 0.1,
@@ -12,6 +13,7 @@ export const defaultIPSettings: IPSettings[] = [
     selected_options: []
   },
   {
+    id: 'ip-2',
     name: 'ИП Марифов',
     margin_type: 'Маржинальность прихода',
     min_margin: 0.1,
@@ -22,6 +24,7 @@ export const defaultIPSettings: IPSettings[] = [
     selected_options: []
   },
   {
+    id: 'ip-3',
     name: 'ИП Хайруллаев',
     margin_type: 'Маржинальность прихода',
     min_margin: 0.1,
@@ -32,6 +35,7 @@ export const defaultIPSettings: IPSettings[] = [
     selected_options: []
   },
   {
+    id: 'ip-4',
     name: 'ИП Техноуют',
     margin_type: 'Маржинальность прихода',
     min_margin: 0.1,

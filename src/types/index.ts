@@ -1,5 +1,6 @@
 // Настройки ИП
 export interface IPSettings {
+  id: string;
   name: string;
   margin_type: 'Маржинальность прихода' | 'Маржинальность продаж';
   min_margin: number;
@@ -7,8 +8,20 @@ export interface IPSettings {
   tax_type: 'Налог с продаж' | 'Налог с прихода';
   tax_nds: number;
   acquiring: number;
-  selected_options?: string[];
+  selected_options: string[];
 }
+
+// Значения по умолчанию для нового ИП
+export const DEFAULT_IP_SETTINGS: Omit<IPSettings, 'id'> = {
+  name: '',
+  margin_type: 'Маржинальность прихода',
+  min_margin: 0.1,
+  tax_usn: 0.06,
+  tax_type: 'Налог с продаж',
+  tax_nds: 0,
+  acquiring: 0.02,
+  selected_options: [],
+};
 
 // Категория комиссий
 export interface CategoryCommission {
