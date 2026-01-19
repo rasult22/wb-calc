@@ -141,6 +141,91 @@ export interface CalculationResult {
   status: string;
 }
 
+// Debug данные - все промежуточные значения расчёта
+export interface DebugData {
+  // Входные данные (для контекста)
+  input: {
+    sale_price: number;
+    purchase_price: number;
+    dimensions: string;
+    direction: string;
+    delivery_type: string;
+    warehouse: string;
+    category: string;
+  };
+
+  // Шаг 1: Объём
+  volume: number;
+  extra_volume: number;
+
+  // Шаг 2: Комиссия
+  options_sum: number;
+  base_commission: number;
+  clothing_discount: number;
+  commission_rate: number;
+
+  // Шаг 3: Логистика
+  small_volume_rate: number | null;
+  location_index_used: number;
+  logistics_cost: number;
+
+  // Шаг 4: Хранение и возвраты
+  storage_cost: number;
+  return_processing: number;
+
+  // Шаг 5: Удержания МП
+  acquiring_rub: number;
+  mp_to_client: number;
+  mp_commission: number;
+  marketing_rub: number;
+  buyout_rate: number;
+  return_expense: number;
+  cashback_expense: number;
+  mp_total: number;
+
+  // Шаг 6: Цена возврата
+  return_cost: number;
+
+  // Шаг 7: Приход
+  income: number;
+
+  // Шаг 8: Налоги
+  tax_type: string;
+  tax_base: number;
+  tax_usn_rub: number;
+  tax_nds_rub: number;
+  tax_total: number;
+
+  // Шаг 9: Себестоимость
+  defect_cost: number;
+  shipping_used: number;
+  extra_costs: number;
+  purchase_price: number;
+  real_costs: number;
+
+  // Шаг 10: Прибыль и маржа
+  profit: number;
+  margin_sales: number;
+  margin_income: number;
+  actual_margin: number;
+  margin_type: string;
+  min_margin_threshold: number;
+  roi: number;
+
+  // Шаг 11: Маркетинг
+  cpo: number;
+  cps: number;
+  ad_percent_in_profit: number;
+
+  // Шаг 12: Итог
+  costs_no_purchase: number;
+  profit_per_unit: number;
+  profit_total: number;
+  revenue_total: number;
+  decision: string;
+  status: string;
+}
+
 // Значения по умолчанию для формы
 export const DEFAULT_PRODUCT_INPUT: ProductInput = {
   sku: '',

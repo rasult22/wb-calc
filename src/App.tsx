@@ -1,14 +1,15 @@
 import { useState, useMemo } from 'react';
-import type { ProductInput, CalculationResult } from './types';
+import type { ProductInput, CalculationResult, DebugData } from './types';
 import { DEFAULT_PRODUCT_INPUT } from './types';
 import { useIPSettings } from './hooks/useIPSettings';
 import { useCategories } from './hooks/useCategories';
 import { tariffOptions } from './data/tariffOptions';
 import { getWarehouse, getWarehousesByType } from './data/warehouses';
-import { calculateUnitEconomics } from './utils/calculator';
+import { calculateUnitEconomicsWithDebug } from './utils/calculator';
 import { IPSettingsPanel } from './components/IPSettingsPanel';
 import { ProductForm } from './components/ProductForm';
 import { ResultCard } from './components/ResultCard';
+import { DebugPanel } from './components/DebugPanel';
 
 function App() {
   // Хук для управления ИП
@@ -51,22 +52,31 @@ function App() {
     );
   }, [product, currentIP]);
 
-  // Расчёт Unit-экономики
-  const calculationResult = useMemo<CalculationResult | null>(() => {
-    if (!isValidForCalculation || !currentIP) return null;
+  // Расчёт Unit-экономики с debug данными
+  const { calculationResult, debugData } = useMemo<{
+    calculationResult: CalculationResult | null;
+    debugData: DebugData | null;
+  }>(() => {
+    if (!isValidForCalculation || !currentIP) {
+      return { calculationResult: null, debugData: null };
+    }
 
     const warehouse = getWarehouse(product.warehouse, product.delivery_type);
     const category = getCategoryBySubject(product.category_wb);
 
-    if (!warehouse || !category) return null;
+    if (!warehouse || !category) {
+      return { calculationResult: null, debugData: null };
+    }
 
-    return calculateUnitEconomics(
+    const { result, debug } = calculateUnitEconomicsWithDebug(
       { ...product, ip_name: currentIP.name },
       currentIP,
       warehouse,
       category,
       tariffOptions
     );
+
+    return { calculationResult: result, debugData: debug };
   }, [product, currentIP, isValidForCalculation, getCategoryBySubject]);
 
   // Обработчики
@@ -127,6 +137,9 @@ function App() {
             </div>
           </div>
         </div>
+
+        {/* Debug панель - показывает все промежуточные расчёты */}
+        {debugData && <DebugPanel debug={debugData} />}
       </main>
 
       {/* Футер */}
