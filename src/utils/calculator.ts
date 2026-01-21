@@ -196,8 +196,8 @@ export function calculateUnitEconomics(
   // 6. Обработка возврата
   const returnProcessing = getReturnProcessing(input.delivery_type);
 
-  // 7. Эквайринг
-  const acquiring = input.sale_price * ipSettings.acquiring;
+  // 7. Эквайринг (с учётом СПП, как в Excel)
+  const acquiring = input.sale_price * (1 - input.spp_percent) * ipSettings.acquiring;
 
   // 8. МП → Клиент
   const mpToClient = input.acceptance_price + storageCost + logisticsCost;
@@ -235,13 +235,21 @@ export function calculateUnitEconomics(
 
   // 13. Налог
   // При "Налог с продаж" база = цена после СПП (фактическая сумма продажи)
+  // НДС выделяется из базы по формуле: база * ставка / (1 + ставка)
+  // УСН считается от (база - НДС)
   let taxBase: number;
   if (ipSettings.tax_type === 'Налог с продаж') {
     taxBase = input.sale_price * (1 - input.spp_percent);
   } else {
     taxBase = income;
   }
-  const tax = taxBase * ipSettings.tax_usn + taxBase * ipSettings.tax_nds;
+  // НДС выделяется из суммы (как в Excel)
+  const nds = ipSettings.tax_nds > 0
+    ? taxBase * ipSettings.tax_nds / (1 + ipSettings.tax_nds)
+    : 0;
+  // УСН считается от базы минус НДС
+  const usn = (taxBase - nds) * ipSettings.tax_usn;
+  const tax = usn + nds;
 
   // 14. Реально тратим
   const shipping = input.direction === 'FBS' ? input.shipping_fbs : input.shipping_fbo;
@@ -400,8 +408,8 @@ export function calculateUnitEconomicsWithDebug(
   // 6. Обработка возврата
   const returnProcessing = getReturnProcessing(input.delivery_type);
 
-  // 7. Эквайринг
-  const acquiring = input.sale_price * ipSettings.acquiring;
+  // 7. Эквайринг (с учётом СПП, как в Excel)
+  const acquiring = input.sale_price * (1 - input.spp_percent) * ipSettings.acquiring;
 
   // 8. МП → Клиент
   const mpToClient = input.acceptance_price + storageCost + logisticsCost;
@@ -442,14 +450,20 @@ export function calculateUnitEconomicsWithDebug(
 
   // 14. Налог
   // При "Налог с продаж" база = цена после СПП (фактическая сумма продажи)
+  // НДС выделяется из базы по формуле: база * ставка / (1 + ставка)
+  // УСН считается от (база - НДС)
   let taxBase: number;
   if (ipSettings.tax_type === 'Налог с продаж') {
     taxBase = input.sale_price * (1 - input.spp_percent);
   } else {
     taxBase = income;
   }
-  const taxUsnRub = taxBase * ipSettings.tax_usn;
-  const taxNdsRub = taxBase * ipSettings.tax_nds;
+  // НДС выделяется из суммы (как в Excel)
+  const taxNdsRub = ipSettings.tax_nds > 0
+    ? taxBase * ipSettings.tax_nds / (1 + ipSettings.tax_nds)
+    : 0;
+  // УСН считается от базы минус НДС
+  const taxUsnRub = (taxBase - taxNdsRub) * ipSettings.tax_usn;
   const tax = taxUsnRub + taxNdsRub;
 
   // 15. Реально тратим
