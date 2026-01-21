@@ -234,9 +234,10 @@ export function calculateUnitEconomics(
   const income = input.sale_price - mpTotal;
 
   // 13. Налог
+  // При "Налог с продаж" база = цена после СПП (фактическая сумма продажи)
   let taxBase: number;
   if (ipSettings.tax_type === 'Налог с продаж') {
-    taxBase = input.sale_price;
+    taxBase = input.sale_price * (1 - input.spp_percent);
   } else {
     taxBase = income;
   }
@@ -440,9 +441,10 @@ export function calculateUnitEconomicsWithDebug(
   const income = input.sale_price - mpTotal;
 
   // 14. Налог
+  // При "Налог с продаж" база = цена после СПП (фактическая сумма продажи)
   let taxBase: number;
   if (ipSettings.tax_type === 'Налог с продаж') {
-    taxBase = input.sale_price;
+    taxBase = input.sale_price * (1 - input.spp_percent);
   } else {
     taxBase = income;
   }
