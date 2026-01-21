@@ -17,12 +17,19 @@ npm run build
 
 # Preview production build
 npm run preview
+
+# Run tests (watch mode)
+npm test
+
+# Run tests once
+npm run test:run
 ```
 
 ## Tech Stack
 
 - **React 19** with TypeScript
 - **Vite 7** as build tool
+- **Vitest** for unit testing
 - **Tailwind CSS 4** via `@tailwindcss/vite` plugin
 - Deployed to GitHub Pages at `/wb-calc/`
 
@@ -84,6 +91,32 @@ The main `calculateUnitEconomics()` function in `src/utils/calculator.ts` implem
 5. Tax calculation (supports different tax bases)
 6. Final profit = income - real costs
 7. Decision (buy/don't buy) based on margin threshold
+
+## Testing
+
+Tests are located in `src/utils/__tests__/` and use Vitest framework.
+
+### Test Structure
+- `calculator.test.ts` - Unit and integration tests for calculator functions
+- `fixtures/resnitsy.ts` - Test data from Excel "Калькулятор маржи СР7.0" (row 141)
+
+### Golden Test Case "ресницы"
+Input: purchase=146₽, sale=600₽, category="Накладные ресницы" (32.5%), warehouse="Коледино", FBO
+Expected: profit=146.39₽, ROI=85.97%, margin_sales=24.40%, margin_income=46.23%
+
+### Running Tests
+```bash
+npm test        # watch mode
+npm run test:run  # single run
+```
+
+## Reference Data Sources
+
+- **Commissions**: `public/data/wb_commissions.csv` - loaded at runtime via fetch
+  - Source: Excel "📄 Комиссии" sheet
+  - To update: export Excel sheet to CSV, then run `python -X utf8 scripts/convert_commissions.py`
+- **Warehouses**: `src/data/warehouses.ts` - WB warehouse tariffs
+- **Tariff Options**: `src/data/tariffOptions.ts` - WB subscription features
 
 ## Detailed Specification
 

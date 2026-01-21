@@ -151,7 +151,11 @@ export interface DebugData {
     direction: string;
     delivery_type: string;
     warehouse: string;
+    warehouse_delivery_1l: number;
+    warehouse_delivery_extra: number;
+    warehouse_storage_1l: number;
     category: string;
+    category_commission: number;
   };
 
   // Шаг 1: Объём
