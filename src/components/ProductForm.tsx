@@ -11,6 +11,8 @@ interface Props {
 export function ProductForm({ product, onChange }: Props) {
   const [categorySearch, setCategorySearch] = useState('');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [warehouseSearch, setWarehouseSearch] = useState('');
+  const [showWarehouseDropdown, setShowWarehouseDropdown] = useState(false);
 
   const { categories, isLoading: categoriesLoading, searchCategories } = useCategories();
 
@@ -23,6 +25,14 @@ export function ProductForm({ product, onChange }: Props) {
     return getWarehousesByType(product.delivery_type);
   }, [product.delivery_type]);
 
+  const filteredWarehouses = useMemo(() => {
+    if (!warehouseSearch) return availableWarehouses.slice(0, 20);
+    const search = warehouseSearch.toLowerCase();
+    return availableWarehouses
+      .filter(wh => wh.name.toLowerCase().includes(search))
+      .slice(0, 20);
+  }, [warehouseSearch, availableWarehouses]);
+
   const handleChange = (field: keyof ProductInput, value: string | number | boolean) => {
     onChange({ ...product, [field]: value });
   };
@@ -31,6 +41,12 @@ export function ProductForm({ product, onChange }: Props) {
     handleChange('category_wb', subject);
     setCategorySearch(subject);
     setShowCategoryDropdown(false);
+  };
+
+  const handleWarehouseSelect = (name: string) => {
+    handleChange('warehouse', name);
+    setWarehouseSearch(name);
+    setShowWarehouseDropdown(false);
   };
 
   return (
@@ -207,6 +223,7 @@ export function ProductForm({ product, onChange }: Props) {
               const warehouses = getWarehousesByType(type);
               if (warehouses.length > 0) {
                 handleChange('warehouse', warehouses[0].name);
+                setWarehouseSearch('');
               }
             }}
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -216,22 +233,46 @@ export function ProductForm({ product, onChange }: Props) {
           </select>
         </div>
 
-        <div>
+        <div className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Склад WB
           </label>
-          <select
-            value={product.warehouse}
-            onChange={(e) => handleChange('warehouse', e.target.value)}
+          <input
+            type="text"
+            value={showWarehouseDropdown ? warehouseSearch : (product.warehouse || '')}
+            onChange={(e) => {
+              setWarehouseSearch(e.target.value);
+              setShowWarehouseDropdown(true);
+            }}
+            onFocus={() => {
+              setWarehouseSearch(product.warehouse || '');
+              setShowWarehouseDropdown(true);
+            }}
+            placeholder="Начните вводить..."
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          >
-            <option value="">Выберите склад</option>
-            {availableWarehouses.map(wh => (
-              <option key={`${wh.name}-${wh.delivery_type}`} value={wh.name}>
-                {wh.name}
-              </option>
-            ))}
-          </select>
+          />
+          {showWarehouseDropdown && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+              {filteredWarehouses.length === 0 ? (
+                <div className="px-3 py-4 text-center text-gray-500">
+                  Ничего не найдено
+                </div>
+              ) : (
+                filteredWarehouses.map(wh => (
+                  <div
+                    key={`${wh.name}-${wh.delivery_type}`}
+                    onClick={() => handleWarehouseSelect(wh.name)}
+                    className="px-3 py-2 hover:bg-purple-50 cursor-pointer"
+                  >
+                    <div className="text-sm font-medium">{wh.name}</div>
+                    <div className="text-xs text-gray-500">
+                      Доставка: {wh.delivery_1l}₽/л • Хранение: {wh.storage_1l}₽/л
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
 
         {/* Доп. параметры */}
