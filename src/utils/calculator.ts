@@ -535,7 +535,11 @@ export function calculateUnitEconomicsWithDebug(
       direction: input.direction,
       delivery_type: input.delivery_type,
       warehouse: warehouse.name,
+      warehouse_delivery_1l: warehouse.delivery_1l,
+      warehouse_delivery_extra: warehouse.delivery_extra_l,
+      warehouse_storage_1l: warehouse.storage_1l,
       category: `${category.category} → ${category.subject}`,
+      category_commission: input.direction === 'FBO' ? category.commission_fbo : category.commission_fbs_to_wb,
     },
 
     // Шаг 1: Объём

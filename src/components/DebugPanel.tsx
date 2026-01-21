@@ -101,10 +101,30 @@ export function DebugPanel({ debug }: DebugPanelProps) {
             <DebugRow name="Цена продажи" value={formatRub(debug.input.sale_price)} />
             <DebugRow name="Закупочная цена" value={formatRub(debug.input.purchase_price)} />
             <DebugRow name="Размеры (В×Ш×Д)" value={debug.input.dimensions + ' см'} />
-            <DebugRow name="Направление" value={debug.input.direction} />
-            <DebugRow name="Тип доставки" value={debug.input.delivery_type} />
-            <DebugRow name="Склад" value={debug.input.warehouse} />
-            <DebugRow name="Категория" value={debug.input.category} />
+            <DebugRow
+              name="Направление"
+              value={debug.input.direction}
+              formula={debug.input.direction === 'FBO' ? 'хранение на складе WB' : 'доставка со склада продавца'}
+              highlight="blue"
+            />
+            <DebugRow
+              name="Тип доставки"
+              value={debug.input.delivery_type}
+              formula={debug.input.delivery_type === 'Короб' ? 'коробочная поставка' : 'монопалета'}
+              highlight="blue"
+            />
+            <DebugRow
+              name="Склад"
+              value={debug.input.warehouse}
+              formula={`дост: ${formatNumber(debug.input.warehouse_delivery_1l)}₽/л +${formatNumber(debug.input.warehouse_delivery_extra)}₽/л, хран: ${formatNumber(debug.input.warehouse_storage_1l)}₽/л`}
+              highlight="blue"
+            />
+            <DebugRow
+              name="Категория"
+              value={debug.input.category}
+              formula={`комиссия ${debug.input.category_commission}%`}
+              highlight="blue"
+            />
           </Section>
 
           {/* Шаг 1: Объём */}
