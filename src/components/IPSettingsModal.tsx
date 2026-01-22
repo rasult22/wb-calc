@@ -10,18 +10,45 @@ interface Props {
   mode: 'create' | 'edit';
 }
 
+// Локальное состояние для процентных полей
+interface PercentFieldsState {
+  min_margin: string;
+  tax_usn: string;
+  tax_nds: string;
+  acquiring: string;
+}
+
+type PercentField = keyof PercentFieldsState;
+
 export function IPSettingsModal({ isOpen, onClose, onSave, initialData, mode }: Props) {
   const [formData, setFormData] = useState<Omit<IPSettings, 'id'>>(DEFAULT_IP_SETTINGS);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Локальные значения для процентных полей
+  const [percentFields, setPercentFields] = useState<PercentFieldsState>({
+    min_margin: '',
+    tax_usn: '',
+    tax_nds: '',
+    acquiring: '',
+  });
+
+  // Синхронизация при открытии модалки
   useEffect(() => {
     if (isOpen) {
+      let data: Omit<IPSettings, 'id'>;
       if (mode === 'edit' && initialData) {
         const { id, ...rest } = initialData;
-        setFormData(rest);
+        data = rest;
       } else {
-        setFormData({ ...DEFAULT_IP_SETTINGS });
+        data = { ...DEFAULT_IP_SETTINGS };
       }
+      setFormData(data);
+      setPercentFields({
+        min_margin: (data.min_margin * 100).toFixed(1),
+        tax_usn: (data.tax_usn * 100).toFixed(1),
+        tax_nds: (data.tax_nds * 100).toFixed(1),
+        acquiring: (data.acquiring * 100).toFixed(2),
+      });
       setErrors({});
     }
   }, [isOpen, initialData, mode]);
@@ -33,10 +60,33 @@ export function IPSettingsModal({ isOpen, onClose, onSave, initialData, mode }: 
     }
   };
 
-  const handlePercentChange = (field: keyof Omit<IPSettings, 'id'>, value: string) => {
-    const numValue = parseFloat(value) / 100;
-    if (!isNaN(numValue)) {
-      handleChange(field, numValue);
+  // Обработка изменения локального значения процентного поля
+  const handlePercentFieldChange = (field: PercentField, value: string) => {
+    setPercentFields(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  // Применение значения при потере фокуса
+  const handlePercentFieldBlur = (field: PercentField) => {
+    const value = percentFields[field];
+    const numValue = parseFloat(value.replace(',', '.')) / 100;
+    const decimals = field === 'acquiring' ? 2 : 1;
+
+    if (!isNaN(numValue) && numValue >= 0 && numValue <= 1) {
+      setFormData(prev => ({ ...prev, [field]: numValue }));
+      // Нормализуем отображаемое значение
+      setPercentFields(prev => ({
+        ...prev,
+        [field]: (numValue * 100).toFixed(decimals)
+      }));
+    } else {
+      // Восстанавливаем из formData
+      setPercentFields(prev => ({
+        ...prev,
+        [field]: (formData[field] as number * 100).toFixed(decimals)
+      }));
     }
   };
 
@@ -136,15 +186,14 @@ export function IPSettingsModal({ isOpen, onClose, onSave, initialData, mode }: 
               Минимальная маржа (%)
             </label>
             <input
-              type="number"
-              value={(formData.min_margin * 100).toFixed(1)}
-              onChange={(e) => handlePercentChange('min_margin', e.target.value)}
+              type="text"
+              inputMode="decimal"
+              value={percentFields.min_margin}
+              onChange={(e) => handlePercentFieldChange('min_margin', e.target.value)}
+              onBlur={() => handlePercentFieldBlur('min_margin')}
               className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
                 errors.min_margin ? 'border-red-500' : 'border-gray-300'
               }`}
-              step="0.1"
-              min="0"
-              max="100"
             />
             {errors.min_margin && <p className="text-red-500 text-xs mt-1">{errors.min_margin}</p>}
           </div>
@@ -158,15 +207,14 @@ export function IPSettingsModal({ isOpen, onClose, onSave, initialData, mode }: 
                 УСН (%)
               </label>
               <input
-                type="number"
-                value={(formData.tax_usn * 100).toFixed(1)}
-                onChange={(e) => handlePercentChange('tax_usn', e.target.value)}
+                type="text"
+                inputMode="decimal"
+                value={percentFields.tax_usn}
+                onChange={(e) => handlePercentFieldChange('tax_usn', e.target.value)}
+                onBlur={() => handlePercentFieldBlur('tax_usn')}
                 className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
                   errors.tax_usn ? 'border-red-500' : 'border-gray-300'
                 }`}
-                step="0.1"
-                min="0"
-                max="100"
               />
               {errors.tax_usn && <p className="text-red-500 text-xs mt-1">{errors.tax_usn}</p>}
               <p className="text-gray-500 text-xs mt-1">
@@ -195,15 +243,14 @@ export function IPSettingsModal({ isOpen, onClose, onSave, initialData, mode }: 
                 НДС (%)
               </label>
               <input
-                type="number"
-                value={(formData.tax_nds * 100).toFixed(1)}
-                onChange={(e) => handlePercentChange('tax_nds', e.target.value)}
+                type="text"
+                inputMode="decimal"
+                value={percentFields.tax_nds}
+                onChange={(e) => handlePercentFieldChange('tax_nds', e.target.value)}
+                onBlur={() => handlePercentFieldBlur('tax_nds')}
                 className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
                   errors.tax_nds ? 'border-red-500' : 'border-gray-300'
                 }`}
-                step="0.1"
-                min="0"
-                max="100"
               />
               {errors.tax_nds && <p className="text-red-500 text-xs mt-1">{errors.tax_nds}</p>}
               <p className="text-gray-500 text-xs mt-1">
@@ -221,15 +268,14 @@ export function IPSettingsModal({ isOpen, onClose, onSave, initialData, mode }: 
                 Эквайринг (%)
               </label>
               <input
-                type="number"
-                value={(formData.acquiring * 100).toFixed(2)}
-                onChange={(e) => handlePercentChange('acquiring', e.target.value)}
+                type="text"
+                inputMode="decimal"
+                value={percentFields.acquiring}
+                onChange={(e) => handlePercentFieldChange('acquiring', e.target.value)}
+                onBlur={() => handlePercentFieldBlur('acquiring')}
                 className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
                   errors.acquiring ? 'border-red-500' : 'border-gray-300'
                 }`}
-                step="0.01"
-                min="0"
-                max="100"
               />
               {errors.acquiring && <p className="text-red-500 text-xs mt-1">{errors.acquiring}</p>}
               <p className="text-gray-500 text-xs mt-1">

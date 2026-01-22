@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { ProductInput } from '../types';
 import { useCategories } from '../hooks/useCategories';
 import { getWarehousesByType } from '../data/warehouses';
@@ -8,11 +8,39 @@ interface Props {
   onChange: (product: ProductInput) => void;
 }
 
+// Локальное состояние для процентных полей
+interface PercentFieldsState {
+  spp_percent: string;
+  buyout_rate: string;
+  marketing_rate: string;
+  defect_rate: string;
+}
+
+type PercentField = keyof PercentFieldsState;
+
 export function ProductForm({ product, onChange }: Props) {
   const [categorySearch, setCategorySearch] = useState('');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [warehouseSearch, setWarehouseSearch] = useState('');
   const [showWarehouseDropdown, setShowWarehouseDropdown] = useState(false);
+
+  // Локальные значения для процентных полей
+  const [percentFields, setPercentFields] = useState<PercentFieldsState>({
+    spp_percent: '',
+    buyout_rate: '',
+    marketing_rate: '',
+    defect_rate: '',
+  });
+
+  // Синхронизация при изменении product извне
+  useEffect(() => {
+    setPercentFields({
+      spp_percent: product.spp_percent ? (product.spp_percent * 100).toString() : '',
+      buyout_rate: product.buyout_rate ? (product.buyout_rate * 100).toString() : '',
+      marketing_rate: product.marketing_rate ? (product.marketing_rate * 100).toString() : '',
+      defect_rate: product.defect_rate ? (product.defect_rate * 100).toString() : '',
+    });
+  }, [product.spp_percent, product.buyout_rate, product.marketing_rate, product.defect_rate]);
 
   const { categories, isLoading: categoriesLoading, searchCategories } = useCategories();
 
@@ -35,6 +63,31 @@ export function ProductForm({ product, onChange }: Props) {
 
   const handleChange = (field: keyof ProductInput, value: string | number | boolean) => {
     onChange({ ...product, [field]: value });
+  };
+
+  // Обработка изменения локального значения процентного поля
+  const handlePercentFieldChange = (field: PercentField, value: string) => {
+    setPercentFields(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Применение значения при потере фокуса
+  const handlePercentFieldBlur = (field: PercentField) => {
+    const value = percentFields[field];
+    const numValue = parseFloat(value.replace(',', '.')) / 100;
+
+    if (!isNaN(numValue) && numValue >= 0 && numValue <= 1) {
+      onChange({ ...product, [field]: numValue });
+    } else if (value === '') {
+      onChange({ ...product, [field]: 0 });
+      setPercentFields(prev => ({ ...prev, [field]: '' }));
+    } else {
+      // Восстанавливаем из product
+      const currentValue = product[field] as number;
+      setPercentFields(prev => ({
+        ...prev,
+        [field]: currentValue ? (currentValue * 100).toString() : ''
+      }));
+    }
   };
 
   const handleCategorySelect = (subject: string) => {
@@ -281,11 +334,11 @@ export function ProductForm({ product, onChange }: Props) {
             СПП + Кошелек WB, %
           </label>
           <input
-            type="number"
-            value={(product.spp_percent * 100) || ''}
-            onChange={(e) => handleChange('spp_percent', (parseFloat(e.target.value) || 0) / 100)}
-            min="0"
-            max="100"
+            type="text"
+            inputMode="decimal"
+            value={percentFields.spp_percent}
+            onChange={(e) => handlePercentFieldChange('spp_percent', e.target.value)}
+            onBlur={() => handlePercentFieldBlur('spp_percent')}
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
         </div>
@@ -295,11 +348,11 @@ export function ProductForm({ product, onChange }: Props) {
             Процент выкупа, %
           </label>
           <input
-            type="number"
-            value={(product.buyout_rate * 100) || ''}
-            onChange={(e) => handleChange('buyout_rate', (parseFloat(e.target.value) || 0) / 100)}
-            min="1"
-            max="100"
+            type="text"
+            inputMode="decimal"
+            value={percentFields.buyout_rate}
+            onChange={(e) => handlePercentFieldChange('buyout_rate', e.target.value)}
+            onBlur={() => handlePercentFieldBlur('buyout_rate')}
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
         </div>
@@ -309,11 +362,11 @@ export function ProductForm({ product, onChange }: Props) {
             Маркетинг, %
           </label>
           <input
-            type="number"
-            value={(product.marketing_rate * 100) || ''}
-            onChange={(e) => handleChange('marketing_rate', (parseFloat(e.target.value) || 0) / 100)}
-            min="0"
-            max="100"
+            type="text"
+            inputMode="decimal"
+            value={percentFields.marketing_rate}
+            onChange={(e) => handlePercentFieldChange('marketing_rate', e.target.value)}
+            onBlur={() => handlePercentFieldBlur('marketing_rate')}
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
         </div>
@@ -323,12 +376,11 @@ export function ProductForm({ product, onChange }: Props) {
             Процент брака, %
           </label>
           <input
-            type="number"
-            value={(product.defect_rate * 100) || ''}
-            onChange={(e) => handleChange('defect_rate', (parseFloat(e.target.value) || 0) / 100)}
-            min="0"
-            max="100"
-            step="0.1"
+            type="text"
+            inputMode="decimal"
+            value={percentFields.defect_rate}
+            onChange={(e) => handlePercentFieldChange('defect_rate', e.target.value)}
+            onBlur={() => handlePercentFieldBlur('defect_rate')}
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
         </div>
