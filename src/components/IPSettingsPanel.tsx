@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { IPSettings } from '../types';
 import { tariffOptions } from '../data/tariffOptions';
 import { IPSettingsModal } from './IPSettingsModal';
@@ -12,6 +12,14 @@ interface Props {
   onUpdateIP: (id: string, data: Partial<Omit<IPSettings, 'id'>>) => void;
   onDeleteIP: (id: string) => void;
   onToggleTariffOption: (optionName: string) => void;
+}
+
+// Локальное состояние для полей быстрых настроек
+interface QuickFieldsState {
+  min_margin: string;
+  tax_usn: string;
+  tax_nds: string;
+  acquiring: string;
 }
 
 export function IPSettingsPanel({
@@ -30,6 +38,26 @@ export function IPSettingsPanel({
     isOpen: boolean;
     mode: 'create' | 'edit';
   }>({ isOpen: false, mode: 'create' });
+
+  // Локальные значения для input полей (строки для свободного редактирования)
+  const [quickFields, setQuickFields] = useState<QuickFieldsState>({
+    min_margin: '',
+    tax_usn: '',
+    tax_nds: '',
+    acquiring: '',
+  });
+
+  // Синхронизация локальных полей при смене IP или изменении данных извне
+  useEffect(() => {
+    if (currentIP) {
+      setQuickFields({
+        min_margin: (currentIP.min_margin * 100).toFixed(1),
+        tax_usn: (currentIP.tax_usn * 100).toFixed(1),
+        tax_nds: (currentIP.tax_nds * 100).toFixed(1),
+        acquiring: (currentIP.acquiring * 100).toFixed(2),
+      });
+    }
+  }, [currentIP?.id, currentIP?.min_margin, currentIP?.tax_usn, currentIP?.tax_nds, currentIP?.acquiring]);
 
   const totalOptionsRate = (currentIP?.selected_options || []).reduce((sum, optName) => {
     const opt = tariffOptions.find(o => o.name === optName);
@@ -68,10 +96,27 @@ export function IPSettingsPanel({
     onUpdateIP(currentIP.id, { [field]: value });
   };
 
-  const handlePercentQuickChange = (field: keyof IPSettings, value: string) => {
-    const numValue = parseFloat(value) / 100;
+  // Обработка изменения локального значения поля (при вводе)
+  const handleQuickFieldChange = (field: keyof QuickFieldsState, value: string) => {
+    setQuickFields(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Применение значения при потере фокуса
+  const handleQuickFieldBlur = (field: keyof QuickFieldsState) => {
+    if (!currentIP) return;
+    const value = quickFields[field];
+    const numValue = parseFloat(value.replace(',', '.')) / 100;
+
     if (!isNaN(numValue) && numValue >= 0 && numValue <= 1) {
-      handleQuickChange(field, numValue);
+      onUpdateIP(currentIP.id, { [field]: numValue });
+    } else {
+      // Если значение невалидное, восстанавливаем из currentIP
+      const currentValue = currentIP[field] as number;
+      const decimals = field === 'acquiring' ? 2 : 1;
+      setQuickFields(prev => ({
+        ...prev,
+        [field]: (currentValue * 100).toFixed(decimals)
+      }));
     }
   };
 
@@ -175,52 +220,48 @@ export function IPSettingsPanel({
             <div>
               <label className="block text-xs text-gray-600 mb-1">Мин. маржа (%)</label>
               <input
-                type="number"
-                value={(currentIP.min_margin * 100).toFixed(1)}
-                onChange={(e) => handlePercentQuickChange('min_margin', e.target.value)}
+                type="text"
+                inputMode="decimal"
+                value={quickFields.min_margin}
+                onChange={(e) => handleQuickFieldChange('min_margin', e.target.value)}
+                onBlur={() => handleQuickFieldBlur('min_margin')}
                 className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-purple-500"
-                step="0.1"
-                min="0"
-                max="100"
               />
             </div>
 
             <div>
               <label className="block text-xs text-gray-600 mb-1">УСН (%)</label>
               <input
-                type="number"
-                value={(currentIP.tax_usn * 100).toFixed(1)}
-                onChange={(e) => handlePercentQuickChange('tax_usn', e.target.value)}
+                type="text"
+                inputMode="decimal"
+                value={quickFields.tax_usn}
+                onChange={(e) => handleQuickFieldChange('tax_usn', e.target.value)}
+                onBlur={() => handleQuickFieldBlur('tax_usn')}
                 className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-purple-500"
-                step="0.1"
-                min="0"
-                max="100"
               />
             </div>
 
             <div>
               <label className="block text-xs text-gray-600 mb-1">НДС (%)</label>
               <input
-                type="number"
-                value={(currentIP.tax_nds * 100).toFixed(1)}
-                onChange={(e) => handlePercentQuickChange('tax_nds', e.target.value)}
+                type="text"
+                inputMode="decimal"
+                value={quickFields.tax_nds}
+                onChange={(e) => handleQuickFieldChange('tax_nds', e.target.value)}
+                onBlur={() => handleQuickFieldBlur('tax_nds')}
                 className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-purple-500"
-                step="0.1"
-                min="0"
-                max="100"
               />
             </div>
 
             <div>
               <label className="block text-xs text-gray-600 mb-1">Эквайринг (%)</label>
               <input
-                type="number"
-                value={(currentIP.acquiring * 100).toFixed(2)}
-                onChange={(e) => handlePercentQuickChange('acquiring', e.target.value)}
+                type="text"
+                inputMode="decimal"
+                value={quickFields.acquiring}
+                onChange={(e) => handleQuickFieldChange('acquiring', e.target.value)}
+                onBlur={() => handleQuickFieldBlur('acquiring')}
                 className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-purple-500"
-                step="0.01"
-                min="0"
-                max="100"
               />
             </div>
 
